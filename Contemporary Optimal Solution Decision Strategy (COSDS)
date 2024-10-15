@@ -1,0 +1,135 @@
+import numpy as np
+
+class QuantumRouteOptimizer:
+    def __init__(self, route_j, num_populations, num_vehicles, iteration):
+        """
+        Initializes the QuantumRouteOptimizer class with input parameters.
+
+        route_j: List of routes selected for all quantum populations at the j-th iteration.
+        num_populations: Number of quantum populations.
+        num_vehicles: Number of vehicles in the road network.
+        iteration: Current iteration number (j).
+        """
+        self.route_j = route_j  # Current selected routes for each vehicle
+        self.num_populations = num_populations  # Number of quantum populations
+        self.num_vehicles = num_vehicles  # Number of vehicles
+        self.iteration = iteration  # Current iteration
+        self.BestFj = []  # Optimal utility set
+        self.BestBmj = []  # Optimal chromosome set
+        self.WorstFj = []  # Worst utility set
+        self.WorstBmj = []  # Worst chromosome set
+
+    def calculate_preference_and_cost(self, vehicle, route):
+        """
+        Computes the preference value (Z) and cost value (K) for the selected route of the vehicle.
+
+        vehicle: Index of the vehicle.
+        route: Selected route for the vehicle.
+
+        Returns:
+        Zij: Preference value for the vehicle's route.
+        Kij: Cost value for the vehicle's route.
+        """
+        # Example values for preference and cost calculations (to be customized)
+        Zr = 10  # Base preference multiplier
+        Ka = 2   # Constant cost factors
+        Kt = 1.5
+        Kd = 1.2
+        Ko = 1.0
+        Kl = 0.5
+        
+        # Compute preference (Z)
+        Zm = 1  # Placeholder for distance metric
+        Zs = 1  # Placeholder for safety metric
+        Zl = 1  # Placeholder for legal compliance metric
+        Zf = 1  # Placeholder for fuel efficiency metric
+        Zw = 1  # Placeholder for wait time metric
+        
+        # Calculate the preference value
+        Zij = Zr * (Zm + Zs + Zl + Zf + Zw)
+        
+        # Compute cost (K)
+        Kij = (Ka + Kt + Kd + Ko + Kl)  # Example computation, customize as needed
+        
+        return Zij, Kij  # Return computed preference and cost values
+
+    def evaluate_utilities(self):
+        """
+        Evaluates the utilities of the selected routes for each vehicle in each population.
+        
+        Returns:
+        Fih: List of utility values for the current iteration.
+        """
+        Fih = []  # List to store utility values for the current iteration
+        
+        for vehicle in range(self.num_vehicles):  # Iterate over each vehicle
+            # Get the selected route for the current vehicle
+            route = self.route_j[vehicle]
+            
+            # Calculate preference and cost for the current vehicle's route
+            Zij, Kij = self.calculate_preference_and_cost(vehicle, route)
+            
+            # Calculate utility F = Z - K
+            utility = Zij - Kij
+            Fih.append(utility)  # Store the calculated utility
+
+        return Fih  # Return the list of utilities for the current iteration
+
+    def update_best_and_worst_sets(self, Fih):
+        """
+        Updates the best and worst utility sets based on the current utilities.
+
+        Fih: List of utility values for the current iteration.
+        """
+        Fbh = max(Fih)  # Find the best utility in the current iteration
+        Fwh = min(Fih)  # Find the worst utility in the current iteration
+        
+        # Update optimal utility set BestFj
+        if len(self.BestFj) == 0 or Fbh > self.BestFj[-1]:
+            self.BestFj.append(Fbh)  # Add new best utility
+            # Add the corresponding quantum chromosome (placeholder)
+            self.BestBmj.append(np.random.rand(5).tolist())  # Random chromosome for demonstration
+        else:
+            self.BestFj.append(self.BestFj[-1])  # Duplicate the last best utility if no new best
+        
+        # Update worst utility set WorstFj
+        self.WorstFj.append(Fwh)  # Add the worst utility
+        # Add the corresponding quantum chromosome (placeholder)
+        self.WorstBmj.append(np.random.rand(5).tolist())  # Random chromosome for demonstration
+
+    def run(self):
+        """
+        Runs the optimization algorithm based on the provided routes and iterations.
+        """
+        # Step 1: Check if the current iteration is the maximum allowed
+        if self.iteration >= 10:  # Example maximum iteration count
+            print("Terminating the algorithm. Current route selection:", self.route_j)
+            return  # Terminate the algorithm if maximum iterations are reached
+        
+        # Step 2: Evaluate utilities for the current iteration
+        Fih = self.evaluate_utilities()
+        
+        # Step 3: Update best and worst utility sets based on the current iteration
+        self.update_best_and_worst_sets(Fih)
+
+        # Output the optimal and worst utility sets
+        print(f"Best Utility Set: {self.BestFj}")
+        print(f"Best Chromosome Set: {self.BestBmj}")
+        print(f"Worst Utility Set: {self.WorstFj}")
+        print(f"Worst Chromosome Set: {self.WorstBmj}")
+
+# Example Usage
+# Assume the selected routes for 3 vehicles in 2 quantum populations at iteration j
+route_j = [
+    [0, 1, 2],  # Route for Vehicle 1
+    [1, 2, 3],  # Route for Vehicle 2
+    [2, 3, 4]   # Route for Vehicle 3
+]
+
+num_populations = 2  # Number of quantum populations
+num_vehicles = 3  # Number of vehicles
+iteration_number = 1  # Current iteration number
+
+# Initialize the optimizer and run it
+optimizer = QuantumRouteOptimizer(route_j, num_populations, num_vehicles, iteration_number)
+optimizer.run()
