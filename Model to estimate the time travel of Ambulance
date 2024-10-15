@@ -1,0 +1,191 @@
+import numpy as np
+
+#Initialization of Quantum States for Vehicles
+
+class QuantumTrafficModel:
+    def __init__(self, num_sections, num_vehicles):
+        """
+        Initialize the quantum traffic model with the number of road sections and vehicles.
+        
+        num_sections: Total number of sections on the road.
+        num_vehicles: Total number of vehicles in the simulation.
+        """
+        self.num_sections = num_sections
+        self.num_vehicles = num_vehicles
+        
+        # Initialize vehicle positions using quantum registers (qubits)
+        self.positions = [self.initialize_qubit(i) for i in range(num_vehicles)]
+    
+    def initialize_qubit(self, vehicle_id):
+        """
+        Initialize a qubit for each vehicle to represent its position on the road.
+        A qubit is represented by a vector of amplitudes in the Hilbert space.
+        
+        vehicle_id: ID of the vehicle to initialize.
+        """
+        position_vector = np.zeros(self.num_sections)  # Initialize the position vector
+        position_vector[vehicle_id] = 1  # Set the initial position for the vehicle
+        return position_vector
+    
+    def display_positions(self):
+        """Display the current positions of all vehicles."""
+        for i, position in enumerate(self.positions):
+            print(f"Vehicle {i + 1} Position: {np.argmax(position)}")
+
+# Initialize the quantum traffic model
+num_sections = 8  # Number of road sections
+num_vehicles = 3  # Number of vehicles
+traffic_model = QuantumTrafficModel(num_sections, num_vehicles)
+traffic_model.display_positions()
+
+#Matrix Mutation Algorithm (Normalization)
+
+def mutate_matrix(M, dx):
+    """
+    Mutates the matrix M to M' while maintaining normalization, as per Algorithm 1.
+    Args:
+    - M: The original matrix to be mutated.
+    - dx: A small change to be applied during mutation.
+    
+    Returns:
+    - M_prime: The mutated matrix.
+    """
+    M_prime = np.copy(M)  # Create a copy of the original matrix
+    
+    n = M.shape[0]  # Number of rows/columns in the matrix
+    
+    # Generate uniformly distributed values for i, j, and dx
+    i = np.random.randint(0, n)
+    j = np.random.randint(0, n)
+    
+    for k in range(n):
+        # Step 1: Modify matrix elements at (i+k, k) and (j+k, k)
+        M_prime[i + k, k] = M[i + k, k] - dx
+        M_prime[j + k, k] = M[j + k, k] + dx
+        
+        # Step 2: Compute the sum of squares before and after the mutation
+        s = (M[i + k, k]**2) + (M[j + k, k]**2)
+        s_prime = (M_prime[i + k, k]**2) + (M_prime[j + k, k]**2)
+        
+        # Step 3: Adjust the values to maintain normalization
+        M_prime[i + k, k] = np.sign(M_prime[i + k, k]) * np.sqrt((M_prime[i + k, k]**2 / s_prime) * s)
+        M_prime[j + k, k] = np.sign(M_prime[j + k, k]) * np.sqrt((M_prime[j + k, k]**2 / s_prime) * s)
+    
+    return M_prime
+
+# Example usage of matrix mutation
+M = np.random.rand(4, 4)  # Random 4x4 matrix
+dx = 0.01  # Small mutation step
+M_prime = mutate_matrix(M, dx)
+
+# Fitness Function for Route Optimization
+
+def fitness_function(M, M_prime):
+    """
+    Calculates the fitness function for matrix M_prime.
+    Args:
+    - M: The original matrix.
+    - M_prime: The mutated matrix.
+    
+    Returns:
+    - fa: The fitness value based on the sum of two parameters: distance and unification.
+    """
+    # Calculate distance between original and mutated matrix (fd)
+    fd = np.linalg.norm(M - M_prime)
+    
+    # Calculate unification parameter (fu)
+    fu = np.sum(np.abs(M_prime - np.mean(M_prime)))
+    
+    # The fitness function is the sum of the two components
+    fa = fd + fu
+    return fa
+
+# Example usage of fitness function
+fitness = fitness_function(M, M_prime)
+
+#Simulating Vehicle Movement Using Quantum Mechanics
+
+class QuantumVehicleMovement:
+    def __init__(self, num_sections, num_vehicles):
+        """
+        Initialize the quantum vehicle movement model.
+        
+        num_sections: Total number of sections on the road.
+        num_vehicles: Total number of vehicles.
+        """
+        self.num_sections = num_sections
+        self.num_vehicles = num_vehicles
+        self.vehicles = np.zeros((num_vehicles, num_sections))  # Vehicle positions
+        
+        # Initialize vehicle positions
+        for i in range(num_vehicles):
+            self.vehicles[i][i] = 1  # Start vehicle in section i
+    
+    def move_vehicle(self, vehicle_id):
+        """
+        Move a vehicle according to quantum probabilities.
+        
+        vehicle_id: ID of the vehicle to move.
+        """
+        current_position = np.argmax(self.vehicles[vehicle_id])
+        move_probs = np.array([0.01, 0.05, 0.94])  # Probabilities for staying, moving 1, or moving 2 sections
+        move_choice = np.random.choice([0, 1, 2], p=move_probs)
+        
+        # Update the vehicle's position based on the movement choice
+        new_position = min(current_position + move_choice, self.num_sections - 1)
+        self.vehicles[vehicle_id] = np.zeros(self.num_sections)  # Reset position vector
+        self.vehicles[vehicle_id][new_position] = 1
+    
+    def display_positions(self):
+        """Display the current positions of all vehicles."""
+        for i, position in enumerate(self.vehicles):
+            print(f"Vehicle {i + 1} Position: {np.argmax(position)}")
+
+# Simulate ambulance movement
+movement_model = QuantumVehicleMovement(num_sections, num_vehicles)
+movement_model.move_vehicle(0)  # Move vehicle 1
+movement_model.display_positions()
+
+#Running the Genetic Algorithm for Optimized Travel Time
+
+def genetic_algorithm(M, max_epochs, alpha, dx):
+    """
+    Runs the genetic algorithm to find the optimal matrix.
+    Args:
+    - M: The original matrix.
+    - max_epochs: The maximum number of epochs for the genetic algorithm.
+    - alpha: The threshold for stopping the algorithm.
+    - dx: The mutation factor.
+    
+    Returns:
+    - BestM: The best matrix found during the algorithm.
+    """
+    best_M = M
+    best_fitness = float('inf')  # Start with an infinite fitness value
+    
+    for epoch in range(max_epochs):
+        print(f"Epoch {epoch + 1}")
+        
+        # Mutate the matrix
+        M_prime = mutate_matrix(best_M, dx)
+        
+        # Calculate fitness
+        fitness = fitness_function(M, M_prime)
+        
+        print(f"Fitness: {fitness}")
+        
+        # Check if fitness is below the threshold
+        if fitness < alpha:
+            print("Stopping criterion reached.")
+            return M_prime
+        
+        # Update best matrix if fitness is better
+        if fitness < best_fitness:
+            best_fitness = fitness
+            best_M = M_prime
+        
+    return best_M
+
+# Example usage of genetic algorithm for travel time estimation
+M = np.random.rand(4, 4)
+BestM = genetic_algorithm(M, max_epochs=100, alpha=3, dx=0.01)
