@@ -1,0 +1,122 @@
+import numpy as np
+
+class QuantumGeneticAlgorithm:
+    def __init__(self, num_populations, num_vehicles, num_sections, best_chromosomes, worst_chromosomes):
+        """
+        Initialize the quantum genetic algorithm with given parameters.
+        
+        num_populations: Number of quantum populations (m).
+        num_vehicles: Number of vehicles in the road network (n).
+        num_sections: Number of road sections in the network (r).
+        best_chromosomes: The optimal set of chromosomes (best solution).
+        worst_chromosomes: The worst set of chromosomes (worst solution).
+        """
+        self.num_populations = num_populations
+        self.num_vehicles = num_vehicles
+        self.num_sections = num_sections
+        self.best_chromosomes = best_chromosomes
+        self.worst_chromosomes = worst_chromosomes
+        
+        # Initialize the quantum chromosomes as a random matrix of qubits (0 or 1)
+        self.quantum_chromosomes = np.random.choice([0, 1], size=(num_populations, num_vehicles, num_sections))
+
+    def compute_deviation_angles(self, population_idx, vehicle_idx, section_idx):
+        """
+        Compute deviation angles for the quantum chromosome at the given position.
+        population_idx: Index of the quantum population.
+        vehicle_idx: Index of the vehicle (n).
+        section_idx: Index of the road section (r).
+        """
+        # Placeholder logic: Compute deviation angle based on best and worst chromosomes
+        best_value = self.best_chromosomes[vehicle_idx][section_idx]
+        worst_value = self.worst_chromosomes[vehicle_idx][section_idx]
+        current_value = self.quantum_chromosomes[population_idx][vehicle_idx][section_idx]
+        
+        # Deviation angle (example logic)
+        deviation_angle = abs(best_value - current_value) - abs(worst_value - current_value)
+        return deviation_angle
+
+    def compute_rotation_angle(self, deviation_angle):
+        """
+        Compute the rotation angle θ based on the deviation angle.
+        deviation_angle: The computed deviation angle for the quantum chromosome.
+        """
+        # Example rotation angle computation: θ is proportional to the deviation angle
+        rotation_angle = np.pi * deviation_angle / 180  # Convert degrees to radians
+        return rotation_angle
+
+    def determine_revolving_gate_direction(self, rotation_angle):
+        """
+        Determine the direction of the revolving gate based on the rotation angle θ.
+        rotation_angle: The computed rotation angle θ.
+        
+        Returns the updated quantum gate direction based on predefined conditions.
+        """
+        # Use Table 6 or some predefined rule to determine direction (example logic)
+        if rotation_angle > 0:
+            gate_direction = "Clockwise"
+        else:
+            gate_direction = "Counterclockwise"
+        return gate_direction
+
+    def update_chromosome(self, population_idx, vehicle_idx, section_idx, rotation_angle, gate_direction):
+        """
+        Update the quantum chromosome at the specified position using the computed rotation angle and gate direction.
+        population_idx: Index of the quantum population.
+        vehicle_idx: Index of the vehicle.
+        section_idx: Index of the road section.
+        rotation_angle: The computed rotation angle θ.
+        gate_direction: The direction of the revolving gate (clockwise or counterclockwise).
+        """
+        # Update chromosome based on rotation angle and gate direction (example logic)
+        if gate_direction == "Clockwise":
+            self.quantum_chromosomes[population_idx][vehicle_idx][section_idx] = 1  # Example mutation
+        else:
+            self.quantum_chromosomes[population_idx][vehicle_idx][section_idx] = 0  # Example mutation
+
+    def update_quantum_chromosomes(self):
+        """
+        Main algorithm to update quantum chromosomes according to the steps described in the algorithm.
+        """
+        i = 1
+        while i <= self.num_vehicles:  # Step 2: Iterate over vehicles
+            l = 1
+            while l <= self.num_sections:  # Step 3: Iterate over road sections
+                for population_idx in range(self.num_populations):
+                    # Step 4: Determine the location of the quantum chromosome to be updated
+                    vehicle_idx = i - 1  # Since i starts from 1
+                    section_idx = l - 1  # Since l starts from 1
+                    
+                    # Step 5: Compute deviation angles for the quantum chromosome
+                    deviation_angle = self.compute_deviation_angles(population_idx, vehicle_idx, section_idx)
+                    
+                    # Step 6: Compute the rotation angle θ based on the deviation angles
+                    rotation_angle = self.compute_rotation_angle(deviation_angle)
+                    
+                    # Step 7: Determine the direction of the revolving gate
+                    gate_direction = self.determine_revolving_gate_direction(rotation_angle)
+                    
+                    # Step 8: Update the quantum chromosome at the determined location
+                    self.update_chromosome(population_idx, vehicle_idx, section_idx, rotation_angle, gate_direction)
+                
+                l += 1  # Step 9: Increment the section index
+            i += 1  # Step 10: Increment the vehicle index
+        
+        # Step 12: Output the updated quantum chromosomes
+        return self.quantum_chromosomes
+
+# Example Usage
+num_populations = 2
+num_vehicles = 3
+num_sections = 4
+
+# Define the best and worst chromosomes as random examples
+best_chromosomes = np.random.choice([0, 1], size=(num_vehicles, num_sections))
+worst_chromosomes = np.random.choice([0, 1], size=(num_vehicles, num_sections))
+
+# Initialize the quantum genetic algorithm
+qga = QuantumGeneticAlgorithm(num_populations, num_vehicles, num_sections, best_chromosomes, worst_chromosomes)
+
+# Run the algorithm to update the quantum chromosomes
+updated_chromosomes = qga.update_quantum_chromosomes()
+print("Updated Quantum Chromosomes:\n", updated_chromosomes)
