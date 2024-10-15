@@ -1,0 +1,96 @@
+import numpy as np
+
+class QuantumChromosome:
+    def __init__(self, num_sections, num_vehicles):
+        """
+        Initialize quantum chromosomes for all vehicles.
+        Each quantum chromosome is represented by two values: alpha and beta.
+        Alpha and beta represent the probabilities of the vehicle traveling a specific road section.
+        
+        num_sections: Number of road sections in the network.
+        num_vehicles: Number of vehicles in the network.
+        """
+        self.chromosomes = np.array([[[np.sqrt(0.5), np.sqrt(0.5)] for _ in range(num_sections)] 
+                                     for _ in range(num_vehicles)])
+  
+
+class QuantumPopulation:
+    def __init__(self, r, n, c, m):
+        """
+        Initializes the quantum population based on the road network and vehicle parameters.
+        
+        r: Number of sections in the road network
+        n: Number of vehicles
+        c: Number of intersections
+        m: Number of quantum populations
+        """
+        self.r = r  # Number of road sections
+        self.n = n  # Number of vehicles
+        self.c = c  # Number of intersections
+        self.m = m  # Number of quantum populations
+        self.population = []  # To store all quantum chromosomes
+        
+        # Initialize the quantum population
+        self.initialize_population()
+
+    def determine_section_intersections(self):
+        """
+        Step 1: Determining the corresponding relationship between sections and intersections in the road network.
+        For simplicity, we assign section `Ei` to random pairs of intersections.
+        """
+        self.sections = []
+        for i in range(self.r):
+            Ls = np.random.randint(0, self.c)  # Random starting intersection
+            Lt = np.random.randint(0, self.c)  # Random destination intersection
+            self.sections.append((Ls, Lt))  # Add the section to the list
+        return self.sections
+
+    def initialize_chromosome(self):
+        """
+        Step 2: Encoding method for each segment of the quantum chromosome.
+        A qubit [alpha, beta] represents each section of the chromosome.
+        """
+        chromosome = []
+        for _ in range(self.r):  # For each road section
+            alpha = np.random.random()  # Random alpha value
+            beta = np.sqrt(1 - alpha**2)  # Ensure alpha^2 + beta^2 = 1
+            chromosome.append([alpha, beta])  # Add the qubit to the chromosome
+        return chromosome
+
+    def initialize_population(self):
+        """
+        Step 3: Assign and encode the quantum chromosome for each vehicle in each quantum population.
+        """
+        for pop in range(self.m):  # For each population
+            quantum_chromosomes = []
+            for vehicle in range(self.n):  # For each vehicle
+                chromosome = self.initialize_chromosome()  # Initialize the chromosome
+                quantum_chromosomes.append(chromosome)  # Add to the population
+            self.population.append(quantum_chromosomes)  # Store the population
+    
+    def display_population(self):
+        """
+        Step 4: Output the initialized quantum chromosome Bm after encoding.
+        """
+        for pop_idx, pop in enumerate(self.population):
+            print(f"Quantum Population {pop_idx + 1}:")
+            for vehicle_idx, chromosome in enumerate(pop):
+                print(f"  Vehicle {vehicle_idx + 1} Chromosome: {chromosome}")
+            print()
+
+# Step-by-Step Explanation of the Code:
+# 1. We define a `QuantumPopulation` class that handles the quantum chromosome initialization for a set of vehicles in a road network.
+# 2. `determine_section_intersections` randomly determines a relationship between road sections and intersections (Step 1).
+# 3. `initialize_chromosome` creates the quantum chromosome for each vehicle by assigning qubits (Step 2).
+# 4. `initialize_population` creates the entire population of quantum chromosomes (Step 3).
+# 5. `display_population` prints out the initialized quantum chromosomes for each vehicle (Step 4).
+
+# Example Usage
+r = 5  # Number of road sections
+n = 3  # Number of vehicles
+c = 4  # Number of intersections
+m = 2  # Number of quantum populations
+
+# Create a quantum population based on the road network
+quantum_population = QuantumPopulation(r, n, c, m)
+quantum_population.display_population()
