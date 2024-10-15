@@ -1,0 +1,180 @@
+import numpy as np
+
+# Step 1: Quantum Chromosome Initialization Strategy (QCIS)
+class QuantumChromosome:
+    def __init__(self, num_sections, num_vehicles):
+        """
+        Initializes the quantum chromosome matrix for a set of vehicles and road sections.
+        Each quantum chromosome (for a vehicle) is represented as a pair of values [alpha, beta],
+        where alpha and beta are the probability amplitudes for states |0> and |1>.
+        
+        num_sections: Number of road sections (routes) each vehicle can travel through
+        num_vehicles: Number of vehicles in the network
+        """
+        self.chromosomes = np.array([[[np.sqrt(0.5), np.sqrt(0.5)] for _ in range(num_sections)] 
+                                     for _ in range(num_vehicles)])
+
+    def initialize_chromosomes(self):
+        """
+        Randomly initializes the quantum chromosome for each vehicle. Each qubit [alpha, beta]
+        represents the probability of selecting a road section, where alpha^2 + beta^2 = 1.
+        """
+        for vehicle in range(len(self.chromosomes)):
+            for section in range(len(self.chromosomes[vehicle])):
+                alpha = np.random.random()  # Random alpha value between 0 and 1
+                beta = np.sqrt(1 - alpha**2)  # Calculate beta based on alpha to satisfy alpha^2 + beta^2 = 1
+                self.chromosomes[vehicle][section] = [alpha, beta]
+
+    def display(self):
+        """
+        Displays the quantum chromosome matrix for all vehicles, where each vehicle has
+        a set of qubits representing the probabilities for each road section.
+        """
+        for vehicle, chromosome in enumerate(self.chromosomes):
+            print(f"Vehicle {vehicle + 1}: {chromosome}")
+
+# Step 2: Quantum Chromosome Mapping Algorithm (QCMA)
+def map_quantum_chromosomes_to_routes(qc, intersections, destinations):
+    """
+    Maps quantum chromosomes to specific routes for each vehicle. The road section with the
+    highest probability amplitude (beta) for state |1> is selected as the next section in the route.
+    
+    qc: QuantumChromosome object containing the qubits for each vehicle
+    intersections: List of starting intersections for each vehicle
+    destinations: List of destination intersections for each vehicle
+    """
+    routes = []
+    for vehicle in range(len(qc.chromosomes)):  # Iterate over each vehicle
+        current_route = []
+        current_intersection = intersections[vehicle]  # Starting intersection of the vehicle
+        destination = destinations[vehicle]  # Destination intersection of the vehicle
+
+        # Continue selecting sections until the vehicle reaches its destination
+        while current_intersection != destination:
+            # Select the section with the highest probability amplitude for |1> (i.e., beta)
+            probabilities = [qubit[1] for qubit in qc.chromosomes[vehicle]]
+            next_section = np.argmax(probabilities)  # Select section with max probability for |1>
+            current_route.append(next_section)  # Add section to the route
+            current_intersection = next_section  # Assume the vehicle moves to the next section (simplified)
+
+        routes.append(current_route)  # Store the route for the current vehicle
+    
+    return routes
+
+# Step 3: Contemporary Optimal Solution Decision Strategy (COSDS)
+def calculate_utility(preference, cost):
+    """
+    Calculates the utility value of a route based on its preference and cost.
+    Utility = Preference (Z) - Cost (K)
+    """
+    return preference - cost
+
+def evaluate_routes(routes, preferences, costs):
+    """
+    Evaluates each route based on the utility function (Preference - Cost).
+    Selects the best and worst routes based on their utility values.
+    
+    routes: List of routes selected for each vehicle
+    preferences: List of preference values for each vehicle's route
+    costs: List of cost values for each vehicle's route
+    """
+    utilities = []
+    for i, route in enumerate(routes):
+        preference_value = preferences[i]  # Preference value for the route
+        cost_value = costs[i]  # Cost value for the route
+        utility_value = calculate_utility(preference_value, cost_value)  # Utility = Z - K
+        utilities.append(utility_value)
+
+    # Find the best and worst routes based on utility values
+    best_route_idx = np.argmax(utilities)  # Index of the best route (max utility)
+    worst_route_idx = np.argmin(utilities)  # Index of the worst route (min utility)
+    return best_route_idx, worst_route_idx, utilities[best_route_idx]
+
+# Step 4: Quantum Updating Algorithm (QUA)
+def apply_rotation_gate(qc, theta, vehicle, section):
+    """
+    Applies a quantum rotation gate to update the qubit of a specific vehicle and section.
+    The rotation adjusts the quantum state of the qubit (alpha, beta) by rotating it by a given angle.
+    
+    qc: QuantumChromosome object containing the qubits for each vehicle
+    theta: Rotation angle (in radians)
+    vehicle: Index of the vehicle whose qubit needs to be updated
+    section: Index of the section whose qubit needs to be updated
+    """
+    alpha, beta = qc.chromosomes[vehicle][section]  # Get current alpha and beta values
+    
+    # Create the rotation matrix based on the given theta (rotation angle)
+    rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)], 
+                                [np.sin(theta), np.cos(theta)]])
+    
+    # Apply the rotation matrix to the qubit [alpha, beta]
+    updated_qubit = np.dot(rotation_matrix, np.array([alpha, beta]))
+    
+    # Update the quantum chromosome for the given vehicle and section
+    qc.chromosomes[vehicle][section] = updated_qubit
+
+def update_population(qc, best_route_idx, worst_route_idx, theta):
+    """
+    Updates the quantum chromosomes of the population using a rotation gate.
+    The best route gets a negative rotation (reversed), while other routes are updated normally.
+    
+    qc: QuantumChromosome object containing the qubits for all vehicles
+    best_route_idx: Index of the vehicle with the best route
+    worst_route_idx: Index of the vehicle with the worst route
+    theta: Rotation angle for updating the qubits
+    """
+    for vehicle in range(len(qc.chromosomes)):
+        for section in range(len(qc.chromosomes[vehicle])):
+            if vehicle == best_route_idx:
+                theta = -theta  # Reverse rotation direction for the best route
+            apply_rotation_gate(qc, theta, vehicle, section)
+
+# Complete IQGA Flow (All steps combined)
+def IQGA_flow(num_sections, num_vehicles, intersections, destinations, preferences, costs, max_iterations=10):
+    """
+    Complete flow of the Improved Quantum Genetic Algorithm (IQGA).
+    Combines all steps: initialization, mapping, evaluation, and updating.
+    
+    num_sections: Number of road sections (routes) each vehicle can travel through
+    num_vehicles: Number of vehicles in the network
+    intersections: Starting points for vehicles
+    destinations: Destinations for vehicles
+    preferences: Preference values for each vehicle's route
+    costs: Cost values for each vehicle's route
+    max_iterations: Number of iterations (generations) to run the IQGA algorithm
+    """
+    # Step 1: Initialize Quantum Chromosomes
+    qc = QuantumChromosome(num_sections, num_vehicles)
+    qc.initialize_chromosomes()  # Randomly initialize the quantum chromosomes
+
+    # Iterative process for multiple generations
+    for iteration in range(max_iterations):
+        print(f"\nIteration {iteration + 1}")
+        qc.display()  # Display current chromosomes for all vehicles
+
+        # Step 2: Map Quantum Chromosomes to Routes
+        routes = map_quantum_chromosomes_to_routes(qc, intersections, destinations)
+        print(f"Routes for each vehicle: {routes}")
+
+        # Step 3: Evaluate Routes with COSDS
+        best_route_idx, worst_route_idx, best_utility = evaluate_routes(routes, preferences, costs)
+        print(f"Best route index: {best_route_idx}, with utility: {best_utility}")
+
+        # Step 4: Update Quantum Population using QUA
+        theta = np.pi / 6  # Rotation angle for quantum gates
+        update_population(qc, best_route_idx, worst_route_idx, theta)
+
+    # Final population display after all iterations
+    print("\nFinal Quantum Chromosome Population:")
+    qc.display()
+
+# Example Usage
+num_sections = 10  # Number of road sections
+num_vehicles = 5   # Number of vehicles
+intersections = [0, 1, 2, 3, 4]  # Starting intersections for each vehicle
+destinations = [5, 5, 5, 5, 5]   # Destination intersections for each vehicle
+preferences = [50, 60, 55, 65, 58]  # Preference values for routes
+costs = [30, 35, 33, 40, 36]        # Cost values for routes
+
+# Run the complete IQGA flow
+IQGA_flow(num_sections, num_vehicles, intersections, destinations, preferences, costs, max_iterations=5)
