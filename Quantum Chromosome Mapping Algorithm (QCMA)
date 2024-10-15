@@ -1,0 +1,121 @@
+import numpy as np
+
+class QuantumRouteSelection:
+    def __init__(self, quantum_population, n, m, intersections, destinations):
+        """
+        Initializes the QuantumRouteSelection with quantum chromosomes, vehicles, and their routes.
+
+        quantum_population: 3D list representing the quantum chromosomes for each vehicle in each population.
+        n: Number of vehicles in the road network.
+        m: Number of quantum populations.
+        intersections: List of starting intersections for each vehicle.
+        destinations: List of destination intersections for each vehicle.
+        """
+        self.quantum_population = quantum_population  # Quantum chromosomes for each vehicle
+        self.n = n  # Number of vehicles
+        self.m = m  # Number of quantum populations
+        self.intersections = intersections  # Starting points for vehicles
+        self.destinations = destinations  # Destination points for vehicles
+
+    def select_next_intersection(self, vehicle, population):
+        """
+        Step 2: Selects the next intersection based on the quantum chromosome using the maximum selection principle.
+
+        vehicle: Index of the vehicle to select the next intersection for.
+        population: Index of the quantum population.
+        """
+        # Extract the chromosome for the current vehicle in the given population
+        chromosome = self.quantum_population[population][vehicle]
+        
+        # Get the probabilities (beta values for |1>) from the chromosome
+        probabilities = [qubit[1] for qubit in chromosome]
+        
+        # Select the index of the intersection with the highest probability
+        next_intersection = np.argmax(probabilities)
+        return next_intersection  # Return the selected intersection index
+
+    def find_route(self, vehicle, population):
+        """
+        Steps 1-5: Determines the route for the given vehicle in the selected quantum population.
+
+        vehicle: Index of the vehicle to find the route for.
+        population: Index of the quantum population.
+        """
+        current_intersection = self.intersections[vehicle]  # Current intersection of the vehicle
+        destination = self.destinations[vehicle]  # Destination intersection of the vehicle
+        route = []  # List to store the route taken by the vehicle
+        visited_intersections = set()  # Set to track visited intersections to avoid loops
+
+        while current_intersection != destination:  # Continue until the vehicle reaches the destination
+            route.append(current_intersection)  # Add the current intersection to the route
+            
+            if current_intersection in visited_intersections:
+                # Step 4: If the current intersection has been visited, backtrack
+                print(f"Loop detected at intersection {current_intersection}. Backtracking...")
+                current_intersection = self.backtrack(vehicle, population)  # Backtrack to find a new intersection
+            else:
+                visited_intersections.add(current_intersection)  # Mark the current intersection as visited
+                
+                # Step 2: Select the next intersection based on the quantum chromosome
+                next_intersection = self.select_next_intersection(vehicle, population)
+                current_intersection = next_intersection  # Move to the next intersection
+
+        route.append(destination)  # Add the destination to the route once reached
+        return route  # Return the complete route taken
+
+    def backtrack(self, vehicle, population):
+        """
+        Step 5: Implements the backtracking principle to find an alternative route when a loop is detected.
+
+        vehicle: Index of the vehicle for which to backtrack.
+        population: Index of the quantum population.
+        """
+        chromosome = self.quantum_population[population][vehicle]  # Get the quantum chromosome for the vehicle
+        
+        # Select the next intersection based on the |0> probabilities (avoiding the visited one)
+        probabilities = [qubit[0] for qubit in chromosome]  # Get probabilities for |0>
+        next_intersection = np.argmax(probabilities)  # Select the intersection with the highest |0> probability
+        
+        print(f"Selected next intersection {next_intersection} after backtracking for Vehicle {vehicle + 1}.")
+        return next_intersection  # Return the next intersection after backtracking
+
+    def run(self):
+        """
+        Runs the quantum route selection for all vehicles across all populations and outputs their routes.
+        """
+        all_routes = []  # List to store routes for all vehicles across populations
+        for population in range(self.m):  # For each quantum population
+            print(f"\nQuantum Population {population + 1}:")
+            population_routes = []  # List to store routes for vehicles in the current population
+            for vehicle in range(self.n):  # For each vehicle
+                route = self.find_route(vehicle, population)  # Find the route for the vehicle
+                population_routes.append(route)  # Add the found route to the population
+                print(f"  Vehicle {vehicle + 1} Route: {route}")  # Output the vehicle's route
+            all_routes.append(population_routes)  # Store all routes for the current population
+        return all_routes  # Return all routes for further processing if needed
+
+# Example Usage
+# Quantum chromosome setup (using example data)
+# Quantum population: m=2 (2 quantum populations), n=3 (3 vehicles), each vehicle has 5 qubits (5 sections)
+quantum_population = [
+    [  # Population 1
+        [[0.7, 0.3], [0.5, 0.5], [0.2, 0.8], [0.9, 0.1], [0.4, 0.6]],  # Vehicle 1
+        [[0.4, 0.6], [0.8, 0.2], [0.6, 0.4], [0.3, 0.7], [0.5, 0.5]],  # Vehicle 2
+        [[0.2, 0.8], [0.9, 0.1], [0.3, 0.7], [0.6, 0.4], [0.5, 0.5]]   # Vehicle 3
+    ],
+    [  # Population 2
+        [[0.8, 0.2], [0.6, 0.4], [0.3, 0.7], [0.5, 0.5], [0.9, 0.1]],  # Vehicle 1
+        [[0.5, 0.5], [0.3, 0.7], [0.2, 0.8], [0.6, 0.4], [0.4, 0.6]],  # Vehicle 2
+        [[0.6, 0.4], [0.4, 0.6], [0.8, 0.2], [0.9, 0.1], [0.5, 0.5]]  # Vehicle 3
+    ]
+]
+
+# Starting intersections and destinations for vehicles
+intersections = [0, 1, 2]  # Starting points for each vehicle
+destinations = [4, 4, 4]   # Destination points for each vehicle
+
+# Initialize and run the route selection
+num_vehicles = 3
+num_populations = 2
+route_selector = QuantumRouteSelection(quantum_population, num_vehicles, num_populations, intersections, destinations)
+route_selector.run()
